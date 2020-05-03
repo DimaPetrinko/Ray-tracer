@@ -147,12 +147,13 @@ public:
     }
 };
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HEIGHT = 720;
 const Vec2 CLIP_PLANES = {1, 2000};
 const int MAX_STEPS = 100;
 const float MIN_DISTANCE = 0.01f;
-const float AMBIENT_LIGHT = 0.06f;
+const float AMBIENT_LIGHT = 0.0f;
+const float SHADOW_BIAS = 0.5f;
 
 std::vector<Renderable *> renderables;
 Camera *camera;
@@ -205,10 +206,15 @@ Vec3 GetNormal(const Vec3 &point)
 
 float GetDiffuseColor(const Vec3 &point)
 {
-    Vec3 directionToLight = (light->position - point).Normalized();
+    Vec3 directionToLight = (light->position - point);
+    Vec3 directionToLightNormalized = directionToLight.Normalized();
     Vec3 surfaceNormal = GetNormal(point);
+    float diffuse = Dot(surfaceNormal, directionToLightNormalized);
 
-    return Dot(surfaceNormal, directionToLight);
+    float distanceToLight = March({point + surfaceNormal, directionToLightNormalized});
+    if (distanceToLight < directionToLight.Magnitude())
+        diffuse *= 0.2f;
+    return diffuse;
 }
 
 int main()
@@ -217,7 +223,7 @@ int main()
     light = new PointLight{{500, 300, -350}};
 
     renderables.push_back(new Sphere({0, 0, 0}, 50));
-    renderables.push_back(new Plane({0, -100, 0}));
+    renderables.push_back(new Plane({0, -50, 0}));
 
     BMP bmp2(SCREEN_WIDTH, SCREEN_HEIGHT);
     for (int y = 0; y < SCREEN_HEIGHT; y++)
