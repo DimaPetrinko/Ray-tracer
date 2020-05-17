@@ -152,7 +152,7 @@ const int SCREEN_HEIGHT = 720;
 const Vec2 CLIP_PLANES = {1, 2000};
 const int MAX_STEPS = 100;
 const float MIN_DISTANCE = 0.01f;
-const float AMBIENT_LIGHT = 0.0f;
+const float AMBIENT_LIGHT = 0.1f;
 const float SHADOW_BIAS = 0.5f;
 
 std::vector<Renderable *> renderables;
@@ -213,14 +213,15 @@ float GetDiffuseColor(const Vec3 &point)
 
     float distanceToLight = March({point + surfaceNormal, directionToLightNormalized});
     if (distanceToLight < directionToLight.Magnitude())
-        diffuse *= 0.2f;
+        diffuse *= AMBIENT_LIGHT;
+
     return diffuse;
 }
 
 int main()
 {
     camera = new Camera{position : {0, 25, -300}, direction : {0, 0, 1}, up : {}, zoom : 700};
-    light = new PointLight{{500, 300, -350}};
+    light = new PointLight{{500, 300, 0}};
 
     renderables.push_back(new Sphere({0, 0, 0}, 50));
     renderables.push_back(new Plane({0, -50, 0}));
@@ -237,11 +238,14 @@ int main()
             Vec3 intersectionPoint = ray.origin + ray.direction * depth;
 
             float diffuseColor = GetDiffuseColor(intersectionPoint);
+
             if (diffuseColor < 0)
                 diffuseColor = 0;
             if (diffuseColor < AMBIENT_LIGHT)
                 diffuseColor = AMBIENT_LIGHT;
+
             float normalizedDiffuseColor = diffuseColor * 255;
+
             if (normalizedDiffuseColor > 255)
                 normalizedDiffuseColor = 255;
 
