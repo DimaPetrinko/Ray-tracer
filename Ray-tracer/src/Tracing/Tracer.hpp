@@ -58,7 +58,7 @@ class Tracer
 public:
 	void Run()
 	{
-		objects.push_back(new Camera(Vec3{0, 1, -5}, Vec3{0, 0, 1}, 700));
+		objects.push_back(new Camera(Vec3{5, 0, 0}, Vec3{-1, 0, 0}, 700));
 		camera = (Camera*)objects.back();
 		objects.push_back(new Light(Vec3{500, 300, 400}, 0.01f));
 		light = (Light*)objects.back();

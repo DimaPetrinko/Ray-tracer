@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include "Tracing/Tracer.h"
+#include "Tracing/Tracer.hpp"
 
 int main()
 {
