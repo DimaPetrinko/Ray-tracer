@@ -4,7 +4,9 @@
 class Light : public Object
 {
 public:
-	Light(const Vec3& position) : Object(position) {}
+	float bias;
+public:
+	Light(const Vec3& position, float bias) : Object(position), bias(bias) {}
 private:
 	void Init() override {}
 };

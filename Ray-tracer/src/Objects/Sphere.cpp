@@ -19,9 +19,7 @@ Hit Sphere::Intersect(const Ray& ray) const
 	hit.distance = p1 - p2 > 0 ? p1 - p2 : p1 + p2;
 	hit.position = ray.origin + ray.direction * hit.distance;
 	hit.normal = (hit.position - position).Normalized();
-	// hit.color = color;
-	Vec3 colorNormal = hit.normal / 2 + Vec3{0.5f ,0.5f, 0.5f};
-	hit.color = {colorNormal.x * 255, colorNormal.y * 255, colorNormal.z * 255, 255};
+	hit.color = color;
 
 	return hit;
 }

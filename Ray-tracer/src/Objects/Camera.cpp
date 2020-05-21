@@ -10,5 +10,7 @@ Vec3 Camera::ZoomedDirection() const
 
 Ray Camera::CreateRay(const Vec3& uv, const Vec2& clipPlanes) const
 {
-	return Ray {origin : position, direction : (ZoomedDirection() + uv).Normalized(), lenght: clipPlanes.y};
+	Vec3 direction = (ZoomedDirection() + uv).Normalized();
+	Vec3 origin = position + direction * clipPlanes.x;
+	return Ray {origin : origin, direction : direction, lenght: clipPlanes.y};
 }
