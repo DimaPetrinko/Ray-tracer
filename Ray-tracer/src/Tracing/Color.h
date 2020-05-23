@@ -20,6 +20,7 @@ struct Color
 	
 	Color operator+(const Color& other) const;
 	Color operator-(const Color& other) const;
+	Color operator*(const Color& other) const;
 	Color operator*(const float& scale) const;
 	Color operator/(const float& fraction) const;
 };

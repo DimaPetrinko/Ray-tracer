@@ -1,8 +1,8 @@
 #include "Sphere.h"
 #include <cmath>
 
-Sphere::Sphere(const Vec3& position, const float& radius, const Color& color)
-	: Renderable(position, color), radius(radius) {}
+Sphere::Sphere(const Vec3& position, const float& radius, const Color& color, const Color& specularColor)
+	: Renderable(position, color, specularColor), radius(radius) {}
 
 Hit Sphere::Intersect(const Ray& ray) const
 {
@@ -19,7 +19,7 @@ Hit Sphere::Intersect(const Ray& ray) const
 	hit.distance = p1 - p2 > 0 ? p1 - p2 : p1 + p2;
 	hit.position = ray.origin + ray.direction * hit.distance;
 	hit.normal = (hit.position - position).Normalized();
-	hit.color = color;
+	hit.object = (Renderable*)this;
 
 	return hit;
 }

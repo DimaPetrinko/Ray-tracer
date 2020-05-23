@@ -1,7 +1,7 @@
 #include "Plane.h"
 
-Plane::	Plane(const Vec3& position, const Vec3& normal, const Color& color)
-	: Renderable(position, color), normal(normal) {}
+Plane::Plane(const Vec3& position, const Vec3& normal, const Color& color, const Color& specularColor)
+	: Renderable(position, color, specularColor), normal(normal) {}
 
 Hit Plane::Intersect(const Ray& ray) const
 {
@@ -20,7 +20,7 @@ Hit Plane::Intersect(const Ray& ray) const
 	hit.distance = distance;
 	hit.position = ray.origin + ray.direction * hit.distance;
 	hit.normal = normal;
-	hit.color = color;
+	hit.object = (Renderable*)this;
 
 	return hit;
 }

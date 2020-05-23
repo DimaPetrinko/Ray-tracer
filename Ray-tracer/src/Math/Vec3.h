@@ -14,3 +14,4 @@ struct Vec3
 };
 
 float Dot (const Vec3& a, const Vec3& b);
+Vec3 Reflect(const Vec3& v, const Vec3& n);

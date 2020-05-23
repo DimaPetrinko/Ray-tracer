@@ -8,6 +8,7 @@ public:
 	Vec3 normal;
 
 public:
-	Plane(const Vec3& position, const Vec3& normal, const Color& color);
+	Plane(const Vec3& position, const Vec3& normal,
+		const Color& color, const Color& specularColor);
 	Hit Intersect(const Ray& ray)  const override;
 };

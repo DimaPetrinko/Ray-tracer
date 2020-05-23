@@ -8,6 +8,7 @@ public:
 	float radius;
 
 public:
-	Sphere(const Vec3& position, const float& radius, const Color& color);
+	Sphere(const Vec3& position, const float& radius,
+		const Color& color, const Color& specularColor);
 	Hit Intersect(const Ray& ray)  const override;
 };

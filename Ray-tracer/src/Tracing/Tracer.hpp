@@ -16,6 +16,9 @@ class Tracer
 	const Vec2 SCREEN_SIZE = {1280, 720};
 	const Vec2 CLIP_PLANES = {1, 2000};
 	const float MAX_SHADOW_DISTANCE = 500.0f;
+	const uint8_t MAX_REFLECTIONS = 8;
+	const uint8_t REFLECTION_THRESHOLD = 1;
+	const float REFLECTION_BIAS = 0.005f;
 
 	Camera* camera;
 	Light* light;
@@ -33,39 +36,53 @@ class Tracer
 		return bestHit;
 	}
 
-	Color Shade(const Hit& hit, const Light& light)
+	Color Shade(Ray& ray, const Hit& hit, const Light& light)
 	{
-		Vec3 directionToLight = (light.position - hit.position).Normalized();
-		Ray ray;
-		ray.origin = hit.position + hit.normal * light.bias;
-		ray.direction = directionToLight;
-		ray.lenght = MAX_SHADOW_DISTANCE;
+		Color color;
+		if (hit.distance < ray.lenght)
+		{
+			ray.origin = hit.position + hit.normal * REFLECTION_BIAS;
+			ray.direction = Reflect(ray.direction, hit.normal);
+			ray.energy = ray.energy * hit.object->specularColor;
 
-		float shadowHitDistance = Trace(ray).distance;
+			Vec3 directionToLight = (light.position - hit.position).Normalized();
+			Ray shadowRay;
+			shadowRay.origin = hit.position + hit.normal * light.bias;
+			shadowRay.direction = directionToLight;
+			shadowRay.lenght = MAX_SHADOW_DISTANCE;
 
-		float shadowLight = shadowHitDistance < ray.lenght ? 0.35f : 1.0f;
-		float diffuseLight = Dot(hit.normal, directionToLight);
+			float shadowHitDistance = Trace(shadowRay).distance;
+			float diffuseLight = shadowHitDistance < shadowRay.lenght ? 0.1f : Dot(hit.normal, directionToLight) + 0.2f;
 
-		float multiplier = shadowLight * diffuseLight;
-		if (multiplier < 0) multiplier = 0;
-		else if (multiplier > 1) multiplier = 1;
+			float multiplier = diffuseLight * light.intensity;
+			
+			if (multiplier < 0) multiplier = 0;
+			else if (multiplier > 1) multiplier = 1;
 
-		Color color = hit.color * multiplier;
-		color.a(hit.color.a());
+			color = hit.object->color * multiplier;
+		}
+		else
+		{
+			ray.energy = 0;
+			color = 0;
+		}
+		
 		return color;
 	}
 
 public:
 	void Run()
 	{
-		objects.push_back(new Camera(Vec3{5, 0, 0}, Vec3{-1, 0, 0}, 700));
+		objects.push_back(new Camera(Vec3{0, 0.5f, -5}, Vec3{0, 0, 1}, 700));
 		camera = (Camera*)objects.back();
-		objects.push_back(new Light(Vec3{500, 300, 400}, 0.01f));
+		objects.push_back(new Light(Vec3{500, 300, -300}, 2.0f, 0.005f));
 		light = (Light*)objects.back();
 
-		objects.push_back(new Sphere{{0,0,0}, 1, {255, 50, 50, 0xff}});
+		objects.push_back(new Sphere{{-1,0,0}, 1, {50,10,10, 0xff}, {150, 100, 100}});
 		renderables.push_back((Renderable*)objects.back());
-		objects.push_back(new Plane({1, -1, 0}, {0,1,0}, {127, 127, 255, 0xff}));
+		objects.push_back(new Sphere{{1,0,-1}, 1, {10, 20, 50, 0xff}, {30,30,30}});
+		renderables.push_back((Renderable*)objects.back());
+		objects.push_back(new Plane({1, -1, 0}, {0,1,0}, {50, 50, 127, 0xff}, {10, 10, 10}));
 		renderables.push_back((Renderable*)objects.back());
 
 		for (int i = 0; i < objects.size(); i++)
@@ -81,9 +98,20 @@ public:
 			{
 				Vec3 normalizedUV = Vec3{x - SCREEN_SIZE.x / 2.0f, y - SCREEN_SIZE.y / 2.0f, 0};
 				Ray ray = camera->CreateRay(normalizedUV, CLIP_PLANES);
+				
+				Color resultColor;
+				for (int i = 0; i < MAX_REFLECTIONS; i++)
+				{
+					Hit bestHit = Trace(ray);
+					Color rayEnergy = ray.energy;
+					resultColor = resultColor + rayEnergy * Shade(ray, bestHit, *light);
 
-				Hit bestHit = Trace(ray);
-				Color resultColor =  Shade(bestHit, *light);
+					if (resultColor.r() <= REFLECTION_THRESHOLD
+					|| resultColor.g() <= REFLECTION_THRESHOLD
+					|| resultColor.b() <= REFLECTION_THRESHOLD)
+						break;
+				}
+				resultColor.a(0xff);
 
 				bmp2.set_pixel(x, y, resultColor.b(), resultColor.g(), resultColor.r(), resultColor.a());
 			}

@@ -32,20 +32,45 @@ void Color::a(const uint8_t& a)
 
 Color Color::operator+(const Color& other) const
 {
-	return Color(r() + other.r(), g() + other.g(), b() + other.b(), a() + other.a());
+	uint16_t r16 = r() + other.r();	if (r16 > 255) r16 = 255;
+	uint16_t g16 = g() + other.g();	if (g16 > 255) g16 = 255;
+	uint16_t b16 = b() + other.b();	if (b16 > 255) b16 = 255;
+	uint16_t a16 = a() + other.a();	if (a16 > 255) a16 = 255;
+	return Color(r16, g16, b16, a16);
 }
 
 Color Color::operator-(const Color& other) const
 {
-	return Color(r() - other.r(), g() - other.g(), b() - other.b(), a() - other.a());
+	uint8_t r8 = other.r() < r() ? r() - other.r() : 0;
+	uint8_t g8 = other.g() < g() ? g() - other.g() : 0;
+	uint8_t b8 = other.b() < b() ? b() - other.b() : 0;
+	uint8_t a8 = other.a() < a() ? a() - other.a() : 0;
+	return Color(r8, g8, b8, a8);
+}
+
+Color Color::operator*(const Color& other) const
+{
+	uint16_t r16 = r() * other.r();
+	uint16_t g16 = g() * other.g();
+	uint16_t b16 = b() * other.b();
+	uint16_t a16 = a() * other.a();
+	return Color(r16 / 255, g16 / 255, b16 / 255, a16 / 255);
 }
 
 Color Color::operator*(const float& scale) const
 {
-	return Color(r() * scale, g() * scale, b() * scale, a() * scale);
+	uint32_t r32 = r() * scale;	if (r32 > 255) r32 = 255;
+	uint32_t g32 = g() * scale;	if (g32 > 255) g32 = 255;
+	uint32_t b32 = b() * scale;	if (b32 > 255) b32 = 255;
+	uint32_t a32 = a() * scale;	if (a32 > 255) a32 = 255;
+	return Color(r32, g32, b32, a32);
 }
 
 Color Color::operator/(const float& fraction) const
 {
-	return Color(r() / fraction, g() / fraction, b() / fraction, a() / fraction);
+	uint32_t r32 = r() / fraction;	if (r32 > 255) r32 = 255;
+	uint32_t g32 = g() / fraction;	if (g32 > 255) g32 = 255;
+	uint32_t b32 = b() / fraction;	if (b32 > 255) b32 = 255;
+	uint32_t a32 = a() / fraction;	if (a32 > 255) a32 = 255;
+	return Color(r32, g32, b32, a32);
 }
