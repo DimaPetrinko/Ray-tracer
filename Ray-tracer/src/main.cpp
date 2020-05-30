@@ -4,7 +4,8 @@
 
 int main()
 {
-	Tracer tracer = Tracer();
-	tracer.Run();
+	Tracer* tracer = new Tracer();
+	tracer->Run();
+	delete tracer;
 	return 0;
 }

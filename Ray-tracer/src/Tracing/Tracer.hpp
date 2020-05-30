@@ -5,6 +5,7 @@
 #include "Math/Vec3.h"
 #include "Tracing/Ray.h"
 #include "Tracing/Hit.h"
+#include "Assets/Texture.h"
 #include "Objects/Renderable.h"
 #include "Objects/Camera.h"
 #include "Objects/Light.h"
@@ -15,13 +16,16 @@ class Tracer
 {
 	const Vec2 SCREEN_SIZE = {1280, 720};
 	const Vec2 CLIP_PLANES = {1, 2000};
+	const float SHADOW_DIFFUSE = 0.0f;
 	const float MAX_SHADOW_DISTANCE = 500.0f;
 	const uint8_t MAX_REFLECTIONS = 8;
 	const uint8_t REFLECTION_THRESHOLD = 1;
 	const float REFLECTION_BIAS = 0.005f;
+	const float PI = 3.14159265359f;
 
 	Camera* camera;
 	Light* light;
+	Texture* skyboxTexture;
 	std::vector<Object*> objects;
 	std::vector<Renderable*> renderables;
 
@@ -36,7 +40,7 @@ class Tracer
 		return bestHit;
 	}
 
-	Color Shade(Ray& ray, const Hit& hit, const Light& light)
+	Color Shade(Ray& ray, const Hit& hit, const Light& light, const Texture* skyboxTexture)
 	{
 		Color color;
 		if (hit.distance < ray.lenght)
@@ -52,7 +56,9 @@ class Tracer
 			shadowRay.lenght = MAX_SHADOW_DISTANCE;
 
 			float shadowHitDistance = Trace(shadowRay).distance;
-			float diffuseLight = shadowHitDistance < shadowRay.lenght ? 0.1f : Dot(hit.normal, directionToLight) + 0.2f;
+			float diffuseLight = shadowHitDistance < shadowRay.lenght
+				? SHADOW_DIFFUSE
+				: Dot(hit.normal, directionToLight) / 2 + SHADOW_DIFFUSE;
 
 			float multiplier = diffuseLight * light.intensity;
 			
@@ -64,8 +70,9 @@ class Tracer
 		else
 		{
 			ray.energy = 0;
-			color = 0;
-			// get color from skybox;
+			float theta = acos(ray.direction.y) / -PI;
+			float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
+			color = skyboxTexture->GetPixel(Vec2{phi, theta});
 		}
 		
 		return color;
@@ -73,22 +80,25 @@ class Tracer
 
 	void Initialize()
 	{
+		skyboxTexture = new Texture("Ray-tracer/res/skybox.bmp");
+
 		objects.push_back(new Camera(Vec3{0, 0.5f, -5}, Vec3{0, 0, 1}, 700));
 		camera = (Camera*)objects.back();
-		objects.push_back(new Light(Vec3{500, 300, -300}, 2.0f, 0.005f));
+		objects.push_back(new Light(Vec3{500, 300, -300}, 1.0f, 0.0001f));
 		light = (Light*)objects.back();
 
-		objects.push_back(new Sphere{{-1,0,0}, 1, {50,10,10, 0xff}, {120,120,120}});
+		objects.push_back(new Sphere{{-1,0,0}, 1, {50,10,10, 0xff}, {255,200,120}});
 		renderables.push_back((Renderable*)objects.back());
-		objects.push_back(new Sphere{{1,-0.25f,-0.5f}, 0.7f, {10, 20, 50, 0xff}, {30,30,30}});
+		objects.push_back(new Sphere{{1,-0.25f,-0.5f}, 0.7f, {10, 20, 50, 0xff}, {30,50,80}});
 		renderables.push_back((Renderable*)objects.back());
-		objects.push_back(new Plane({1, -1, 0}, {0,1,0}, {100, 100, 100, 0xff}, {10, 10, 10}));
+		objects.push_back(new Plane({1, -1, 0}, {0,1,0}, {100, 100, 100, 0xff}, {50, 50, 50}));
 		renderables.push_back((Renderable*)objects.back());
 
 	}
 
 	void Deinitialize()
 	{
+		delete skyboxTexture;
 		for (const auto& o : objects)
 		{
 			Object* sphere = (Object*)objects[2];
@@ -116,11 +126,11 @@ public:
 				{
 					Hit bestHit = Trace(ray);
 					Color rayEnergy = ray.energy;
-					resultColor = resultColor + rayEnergy * Shade(ray, bestHit, *light);
+					resultColor = resultColor + rayEnergy * Shade(ray, bestHit, *light, skyboxTexture);
 
-					if (resultColor.r() <= REFLECTION_THRESHOLD
-					|| resultColor.g() <= REFLECTION_THRESHOLD
-					|| resultColor.b() <= REFLECTION_THRESHOLD)
+					if (rayEnergy.r() <= REFLECTION_THRESHOLD
+					|| rayEnergy.g() <= REFLECTION_THRESHOLD
+					|| rayEnergy.b() <= REFLECTION_THRESHOLD)
 						break;
 				}
 				resultColor.a(0xff);
