@@ -65,31 +65,43 @@ class Tracer
 		{
 			ray.energy = 0;
 			color = 0;
+			// get color from skybox;
 		}
 		
 		return color;
 	}
 
-public:
-	void Run()
+	void Initialize()
 	{
 		objects.push_back(new Camera(Vec3{0, 0.5f, -5}, Vec3{0, 0, 1}, 700));
 		camera = (Camera*)objects.back();
 		objects.push_back(new Light(Vec3{500, 300, -300}, 2.0f, 0.005f));
 		light = (Light*)objects.back();
 
-		objects.push_back(new Sphere{{-1,0,0}, 1, {50,10,10, 0xff}, {150, 100, 100}});
+		objects.push_back(new Sphere{{-1,0,0}, 1, {50,10,10, 0xff}, {120,120,120}});
 		renderables.push_back((Renderable*)objects.back());
-		objects.push_back(new Sphere{{1,0,-1}, 1, {10, 20, 50, 0xff}, {30,30,30}});
+		objects.push_back(new Sphere{{1,-0.25f,-0.5f}, 0.7f, {10, 20, 50, 0xff}, {30,30,30}});
 		renderables.push_back((Renderable*)objects.back());
-		objects.push_back(new Plane({1, -1, 0}, {0,1,0}, {50, 50, 127, 0xff}, {10, 10, 10}));
+		objects.push_back(new Plane({1, -1, 0}, {0,1,0}, {100, 100, 100, 0xff}, {10, 10, 10}));
 		renderables.push_back((Renderable*)objects.back());
 
-		for (int i = 0; i < objects.size(); i++)
+	}
+
+	void Deinitialize()
+	{
+		for (const auto& o : objects)
 		{
-			const auto& o = objects[i];
-			std::cout<<o;
+			Object* sphere = (Object*)objects[2];
+			delete o;
 		}
+		renderables.clear();
+		objects.clear();
+	}
+
+public:
+	void Run()
+	{
+		Initialize();
 
 		BMP bmp2(SCREEN_SIZE.x, SCREEN_SIZE.y);
 		for (int y = 0; y < SCREEN_SIZE.y; y++)
@@ -116,15 +128,8 @@ public:
 				bmp2.set_pixel(x, y, resultColor.b(), resultColor.g(), resultColor.r(), resultColor.a());
 			}
 		}
-
 		bmp2.write("Ray-tracer/res/ray_traced_frame.bmp");
 
-		for (const auto& o : objects)
-		{
-			Object* sphere = (Object*)objects[2];
-			delete o;
-		}
-		renderables.clear();
-		objects.clear();
+		Deinitialize();
 	}
 };
