@@ -26,6 +26,7 @@ class Tracer
 	Camera* camera;
 	Light* light;
 	Texture* skyboxTexture;
+	Texture* outputTexture;
 	std::vector<Object*> objects;
 	std::vector<Renderable*> renderables;
 
@@ -99,9 +100,21 @@ class Tracer
 		return resultColor;
 	}
 
-	void Initialize()
+	void LoadAssets()
 	{
 		skyboxTexture = new Texture("Ray-tracer/res/skybox.bmp");
+		outputTexture = new Texture(SCREEN_SIZE.x, SCREEN_SIZE.y);
+	}
+
+	void UnloadAssets()
+	{
+		delete skyboxTexture;
+		delete outputTexture;
+	}
+
+	void Initialize()
+	{
+		LoadAssets();
 
 		objects.push_back(new Camera(Vec3{0, 0.5f, -5}, Vec3{0, 0, 1}, 700));
 		camera = (Camera*)objects.back();
@@ -119,7 +132,6 @@ class Tracer
 
 	void Deinitialize()
 	{
-		delete skyboxTexture;
 		for (const auto& o : objects)
 		{
 			Object* sphere = (Object*)objects[2];
@@ -127,6 +139,8 @@ class Tracer
 		}
 		renderables.clear();
 		objects.clear();
+
+		UnloadAssets();
 	}
 
 public:
@@ -134,7 +148,6 @@ public:
 	{
 		Initialize();
 
-		Texture* outputTexture = new Texture(SCREEN_SIZE.x, SCREEN_SIZE.y);
 		for (int y = 0; y < SCREEN_SIZE.y; y++)
 		{
 			for (int x = 0; x < SCREEN_SIZE.x; x++)
@@ -144,7 +157,6 @@ public:
 			}
 		}
 		outputTexture->Save("Ray-tracer/res/ray_traced_frame.bmp");
-		delete outputTexture;
 
 		Deinitialize();
 	}
