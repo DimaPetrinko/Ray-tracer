@@ -11,7 +11,11 @@ private:
 	BMP bmp;
 public:
 	Texture(const std::string& path);
+	Texture(const int& width, const int& height);
 
 	Color GetPixel(const Vec2& uv) const;
+	Color GetPixel(const int& u, const int& v) const;
 	void SetPixel(const Vec2& uv, const Color& color);
+	void SetPixel(const int& u, const int& v, const Color& color);
+	void Save(const std::string& path);
 };

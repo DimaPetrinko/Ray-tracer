@@ -78,6 +78,27 @@ class Tracer
 		return color;
 	}
 
+	Color ProcessPixel(const int& u, const int& v)
+	{
+		Vec3 normalizedUV = Vec3{u - SCREEN_SIZE.x / 2.0f, v - SCREEN_SIZE.y / 2.0f, 0};
+		Ray ray = camera->CreateRay(normalizedUV, CLIP_PLANES);
+		
+		Color resultColor;
+		for (int i = 0; i < MAX_REFLECTIONS; i++)
+		{
+			Hit bestHit = Trace(ray);
+			Color rayEnergy = ray.energy;
+			resultColor = resultColor + rayEnergy * Shade(ray, bestHit, *light, skyboxTexture);
+
+			if (rayEnergy.r() <= REFLECTION_THRESHOLD
+			|| rayEnergy.g() <= REFLECTION_THRESHOLD
+			|| rayEnergy.b() <= REFLECTION_THRESHOLD)
+				break;
+		}
+		resultColor.a(0xff);
+		return resultColor;
+	}
+
 	void Initialize()
 	{
 		skyboxTexture = new Texture("Ray-tracer/res/skybox.bmp");
@@ -113,32 +134,17 @@ public:
 	{
 		Initialize();
 
-		BMP bmp2(SCREEN_SIZE.x, SCREEN_SIZE.y);
+		Texture* outputTexture = new Texture(SCREEN_SIZE.x, SCREEN_SIZE.y);
 		for (int y = 0; y < SCREEN_SIZE.y; y++)
 		{
 			for (int x = 0; x < SCREEN_SIZE.x; x++)
 			{
-				Vec3 normalizedUV = Vec3{x - SCREEN_SIZE.x / 2.0f, y - SCREEN_SIZE.y / 2.0f, 0};
-				Ray ray = camera->CreateRay(normalizedUV, CLIP_PLANES);
-				
-				Color resultColor;
-				for (int i = 0; i < MAX_REFLECTIONS; i++)
-				{
-					Hit bestHit = Trace(ray);
-					Color rayEnergy = ray.energy;
-					resultColor = resultColor + rayEnergy * Shade(ray, bestHit, *light, skyboxTexture);
-
-					if (rayEnergy.r() <= REFLECTION_THRESHOLD
-					|| rayEnergy.g() <= REFLECTION_THRESHOLD
-					|| rayEnergy.b() <= REFLECTION_THRESHOLD)
-						break;
-				}
-				resultColor.a(0xff);
-
-				bmp2.set_pixel(x, y, resultColor.b(), resultColor.g(), resultColor.r(), resultColor.a());
+				Color resultColor = ProcessPixel(x, y);
+				outputTexture->SetPixel(x, y, resultColor);
 			}
 		}
-		bmp2.write("Ray-tracer/res/ray_traced_frame.bmp");
+		outputTexture->Save("Ray-tracer/res/ray_traced_frame.bmp");
+		delete outputTexture;
 
 		Deinitialize();
 	}
