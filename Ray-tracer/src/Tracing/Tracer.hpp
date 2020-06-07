@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <functional>
 #include "bmp.hpp"
 #include "Math/Vec2.h"
 #include "Math/Vec3.h"
@@ -160,7 +161,6 @@ class Tracer
 public:
 	void Run()
 	{
-
 		LoadAssets();
 		Initialize();
 
