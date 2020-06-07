@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include "bmp.hpp"
 #include "Math/Vec2.h"
 #include "Math/Vec3.h"
@@ -148,6 +149,7 @@ public:
 	{
 		Initialize();
 
+		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 		for (int y = 0; y < SCREEN_SIZE.y; y++)
 		{
 			for (int x = 0; x < SCREEN_SIZE.x; x++)
@@ -156,6 +158,8 @@ public:
 				outputTexture->SetPixel(x, y, resultColor);
 			}
 		}
+		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 		outputTexture->Save("Ray-tracer/res/ray_traced_frame.bmp");
 
 		Deinitialize();
