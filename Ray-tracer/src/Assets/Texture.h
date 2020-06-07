@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <mutex>
 #include "bmp.hpp"
 #include "Math/Vec2.h"
 #include "Tracing/Color.h"
@@ -9,6 +10,7 @@ class Texture
 {
 private:
 	BMP bmp;
+	mutable std::mutex m;
 public:
 	Texture(const std::string& path);
 	Texture(const int& width, const int& height);
