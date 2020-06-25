@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <chrono>
+#include <thread>
+#include <functional>
 #include "bmp.hpp"
 #include "Math/Vec2.h"
 #include "Math/Vec3.h"
@@ -103,19 +104,21 @@ class Tracer
 
 	void LoadAssets()
 	{
+		std::cout << "Loading assets\n";
 		skyboxTexture = new Texture("Ray-tracer/res/skybox.bmp");
 		outputTexture = new Texture(SCREEN_SIZE.x, SCREEN_SIZE.y);
 	}
 
 	void UnloadAssets()
 	{
+		std::cout << "Unoading assets\n";
 		delete skyboxTexture;
 		delete outputTexture;
 	}
 
 	void Initialize()
 	{
-		LoadAssets();
+		std::cout << "Initializing environment\n";
 
 		objects.push_back(new Camera(Vec3{0, 0.5f, -5}, Vec3{0, 0, 1}, 700));
 		camera = (Camera*)objects.back();
@@ -133,6 +136,8 @@ class Tracer
 
 	void Deinitialize()
 	{
+		std::cout << "Deinitializing environment\n";
+
 		for (const auto& o : objects)
 		{
 			Object* sphere = (Object*)objects[2];
@@ -140,28 +145,68 @@ class Tracer
 		}
 		renderables.clear();
 		objects.clear();
+	}
 
-		UnloadAssets();
+	void RenderPixelAsync(Texture* output, int x, int y)
+	{
+		Color resultColor = ProcessPixel(x, y);
+		output->SetPixel(x, y, resultColor);
+	}
+
+	void RenderPixelBatch(std::vector<std::function<void()>> batch)
+	{
+		for (auto f : batch) f();
 	}
 
 public:
 	void Run()
 	{
+		LoadAssets();
 		Initialize();
+
+		std::cout << "Starting to render\n";
+
+		std::vector<std::thread> threadPool;
+
+		const int availableThreads = 8;
+		int totalPixelCount = SCREEN_SIZE.x * SCREEN_SIZE.y;
+		int batchSize = totalPixelCount / availableThreads;
+
+		if (batchSize > totalPixelCount) batchSize = totalPixelCount;
+		else if (batchSize < 0) batchSize = 0;
+
+		std::vector<std::function<void()>> currentBatch;
 
 		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 		for (int y = 0; y < SCREEN_SIZE.y; y++)
 		{
 			for (int x = 0; x < SCREEN_SIZE.x; x++)
 			{
-				Color resultColor = ProcessPixel(x, y);
-				outputTexture->SetPixel(x, y, resultColor);
+				currentBatch.push_back([this, x, y]() { RenderPixelAsync(outputTexture, x, y); });
+				if (currentBatch.size() >= batchSize)
+				{
+					threadPool.push_back(std::thread(&Tracer::RenderPixelBatch, this, currentBatch));
+					currentBatch.clear();
+				}
 			}
+		}
+		if (!currentBatch.empty())
+		{
+			threadPool.push_back(std::thread(&Tracer::RenderPixelBatch, this, currentBatch));
+					currentBatch.clear();
+		}
+
+		for (auto& t : threadPool)
+		{
+			t.join();
 		}
 		std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 		std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+
+		std::cout << "Saving output texture\n";
 		outputTexture->Save("Ray-tracer/res/ray_traced_frame.bmp");
 
 		Deinitialize();
+		UnloadAssets();
 	}
 };

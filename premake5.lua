@@ -42,3 +42,4 @@ workspace "Ray-tracer"
 		}
 
 	 	libdirs {"%{prj.name}/lib/%{cfg.platform}"}
+		links {"pthread"}

@@ -15,8 +15,7 @@ Color Texture::GetPixel(const Vec2& uv) const
 	y = uv.y * bmp.bmp_info_header.height;
 	if (uv.y < 0) y = bmp.bmp_info_header.height + y;
 
-	bmp.get_pixel(x, y, b, g, r, a);
-	return Color(r, g, b, a);
+	return GetPixel(x, y);
 }
 
 Color Texture::GetPixel(const int& u, const int& v) const
@@ -36,15 +35,17 @@ void Texture::SetPixel(const Vec2& uv, const Color& color)
 	y = uv.y * bmp.bmp_info_header.height;
 	if (uv.y < 0) y = bmp.bmp_info_header.height + y;
 
-	bmp.set_pixel(uv.x, uv.y, color.b(), color.g(), color.r(), color.a());
+	SetPixel(x, y, color);
 }
 
 void Texture::SetPixel(const int& u, const int& v, const Color& color)
 {
+	std::lock_guard<std::mutex> lock(m);
 	bmp.set_pixel(u, v, color.b(), color.g(), color.r(), color.a());
 }
 
 void Texture::Save(const std::string& path)
 {
+	std::lock_guard<std::mutex> lock(m);
 	bmp.write(path.c_str());
 }

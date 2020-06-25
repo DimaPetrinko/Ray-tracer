@@ -57,7 +57,11 @@
 			"ctime": "cpp",
 			"ratio": "cpp",
 			"iomanip": "cpp",
-			"bit": "cpp"
+			"bit": "cpp",
+			"condition_variable": "cpp",
+			"future": "cpp",
+			"mutex": "cpp",
+			"thread": "cpp"
 		}
 	}
 }
