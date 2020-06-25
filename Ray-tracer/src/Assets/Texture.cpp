@@ -21,7 +21,6 @@ Color Texture::GetPixel(const Vec2& uv) const
 Color Texture::GetPixel(const int& u, const int& v) const
 {
 	uint8_t r, g, b, a;
-	std::lock_guard<std::mutex> lock(m);
 	bmp.get_pixel(u, v, b, g, r, a);
 	return Color(r, g, b, a);
 }
