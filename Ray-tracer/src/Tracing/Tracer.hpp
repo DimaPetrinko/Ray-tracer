@@ -193,7 +193,7 @@ public:
 		if (!currentBatch.empty())
 		{
 			threadPool.push_back(std::thread(&Tracer::RenderPixelBatch, this, currentBatch));
-					currentBatch.clear();
+			currentBatch.clear();
 		}
 
 		for (auto& t : threadPool)
